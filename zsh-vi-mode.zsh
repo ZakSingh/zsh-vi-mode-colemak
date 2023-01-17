@@ -1425,14 +1425,14 @@ function zvm_navigation_handler() {
       '$') cmd=(zle vi-end-of-line);;
       ' ') cmd=(zle vi-forward-char);;
       '0') cmd=(zle vi-digit-or-beginning-of-line);;
-      'h') cmd=(zle vi-backward-char);;
-      'j') cmd=(zle down-line-or-history);;
-      'k') cmd=(zle up-line-or-history);;
-      'l') cmd=(zle vi-forward-char);;
+      'm') cmd=(zle vi-backward-char);;
+      'n') cmd=(zle down-line-or-history);;
+      'e') cmd=(zle up-line-or-history);;
+      'i') cmd=(zle vi-forward-char);;
       'w') cmd=(zle vi-forward-word);;
       'W') cmd=(zle vi-forward-blank-word);;
-      'e') cmd=(zle vi-forward-word-end);;
-      'E') cmd=(zle vi-forward-blank-word-end);;
+      'j') cmd=(zle vi-forward-word-end);;
+      'J') cmd=(zle vi-forward-blank-word-end);;
       'b') cmd=(zle vi-backward-word);;
       'B') cmd=(zle vi-backward-blank-word);;
     esac
@@ -1512,9 +1512,9 @@ function zvm_range_handler() {
     keys="${keys}${key}"
   done
 
-  # If the last character is `i` or `a`, we should, we
+  # If the last character is `l` or `a`, we should, we
   # should read one more key
-  if [[ ${keys: -1} =~ [ia] ]]; then
+  if [[ ${keys: -1} =~ [la] ]]; then
     zvm_update_cursor
     read -k 1 key
     keys="${keys}${key}"
@@ -1524,7 +1524,7 @@ function zvm_range_handler() {
   if [[ $ZVM_MODE != $ZVM_MODE_VISUAL &&
     $ZVM_MODE != $ZVM_MODE_VISUAL_LINE ]]; then
     case "${keys}" in
-      [cdy][jk]) mode=$ZVM_MODE_VISUAL_LINE;;
+      [cdy][ne]) mode=$ZVM_MODE_VISUAL_LINE;;
       cc|dd|yy) mode=$ZVM_MODE_VISUAL_LINE;;
       *) mode=$ZVM_MODE_VISUAL;;
     esac
@@ -1596,25 +1596,25 @@ function zvm_range_handler() {
   # Pre navigation handling
   local navkey=
 
-  if [[ $keys =~ '^c([1-9][0-9]*)?[ia][wW]$' ]]; then
+  if [[ $keys =~ '^c([1-9][0-9]*)?[la][wW]$' ]]; then
     count=${match[1]:-1}
     navkey=${keys: -2}
-  elif [[ $keys =~ '^[cdy]([1-9][0-9]*)?[ia][eE]$' ]]; then
+  elif [[ $keys =~ '^[cdy]([1-9][0-9]*)?[la][eE]$' ]]; then
     navkey=
   elif [[ $keys =~ '^c([1-9][0-9]*)?w$' ]]; then
     zle vi-backward-char
     count=${match[1]:-1}
-    navkey='e'
+    navkey='j'
   elif [[ $keys =~ '^c([1-9][0-9]*)?W$' ]]; then
     zle vi-backward-blank-char
     count=${match[1]:-1}
-    navkey='E'
-  elif [[ $keys =~ '^c([1-9][0-9]*)?e$' ]]; then
+    navkey='J'
+  elif [[ $keys =~ '^c([1-9][0-9]*)?j$' ]]; then
     count=${match[1]:-1}
-    navkey='e'
-  elif [[ $keys =~ '^c([1-9][0-9]*)?E$' ]]; then
+    navkey='j'
+  elif [[ $keys =~ '^c([1-9][0-9]*)?J$' ]]; then
     count=${match[1]:-1}
-    navkey='E'
+    navkey='J'
   elif [[ $keys =~ '^[cdy]([1-9][0-9]*)?[bB]$' ]]; then
     MARK=$((MARK-1))
     count=${match[1]:-1}
@@ -1623,22 +1623,22 @@ function zvm_range_handler() {
     MARK=$((MARK-1))
     count=${match[1]:-1}
     navkey=${match[2]}
-  elif [[ $keys =~ '^[cdy]([1-9][0-9]*)?j$' ]]; then
+  elif [[ $keys =~ '^[cdy]([1-9][0-9]*)?n$' ]]; then
     # Exit if there is no line below
     count=${match[1]:-1}
     for ((i=$((CURSOR+1)); i<=$#BUFFER; i++)); do
-      [[ ${BUFFER[$i]} == $'\n' ]] && navkey='j'
+      [[ ${BUFFER[$i]} == $'\n' ]] && navkey='n'
     done
-  elif [[ $keys =~ '^[cdy]([1-9][0-9]*)?k$' ]]; then
+  elif [[ $keys =~ '^[cdy]([1-9][0-9]*)?e$' ]]; then
     # Exit if there is no line above
     count=${match[1]:-1}
     for ((i=$((CURSOR+1)); i>0; i--)); do
-      [[ ${BUFFER[$i]} == $'\n' ]] && navkey='k'
+      [[ ${BUFFER[$i]} == $'\n' ]] && navkey='e'
     done
-  elif [[ $keys =~ '^[cdy]([1-9][0-9]*)?h$' ]]; then
+  elif [[ $keys =~ '^[cdy]([1-9][0-9]*)?m$' ]]; then
     MARK=$((MARK-1))
     count=${match[1]:-1}
-    navkey='h'
+    navkey='m'
 
     # Exit if the cursor is at the beginning of a line
     if ((MARK < 0)); then
@@ -1646,7 +1646,7 @@ function zvm_range_handler() {
     elif [[ ${BUFFER[$MARK+1]} == $'\n' ]]; then
       navkey=
     fi
-  elif [[ $keys =~ '^[cdy]([1-9][0-9]*)?l$' ]]; then
+  elif [[ $keys =~ '^[cdy]([1-9][0-9]*)?i$' ]]; then
     count=${match[1]:-1}
     count=$((count-1))
     navkey=${count}l
@@ -1717,7 +1717,7 @@ function zvm_range_handler() {
   fi
 
   # Post navigation handling
-  if [[ $keys =~ '^[cdy]([1-9][0-9]*)?[ia][wW]$' ]]; then
+  if [[ $keys =~ '^[cdy]([1-9][0-9]*)?[la][wW]$' ]]; then
     cursor=$MARK
   elif [[ $keys =~ '[dy]([1-9][0-9]*)?[wW]' ]]; then
     CURSOR=$((CURSOR-1))
@@ -1901,7 +1901,7 @@ function zvm_select_surround() {
   fi
   local bpos=${ret[1]}
   local epos=${ret[2]}
-  if [[ ${action:1:1} == 'i' ]]; then
+  if [[ ${action:1:1} == 'l' ]]; then
     ((bpos++))
   else
     ((epos++))
@@ -1992,7 +1992,7 @@ function zvm_change_surround_text_object() {
   fi
   local bpos=${ret[1]}
   local epos=${ret[2]}
-  if [[ ${action:1:1} == 'i' ]]; then
+  if [[ ${action:1:1} == 'l' ]]; then
     ((bpos++))
   else
     ((epos++))
@@ -2019,7 +2019,7 @@ function zvm_repeat_change() {
 
   # Handle repeat command
   case $cmd in
-    [aioAIO]) zvm_repeat_insert;;
+    [aloALO]) zvm_repeat_insert;;
     c) zvm_repeat_vi_change;;
     [cd]*) zvm_repeat_range_change;;
     R) zvm_repeat_replace;;
@@ -2049,7 +2049,7 @@ function zvm_repeat_insert() {
       zle vi-end-of-line
       CURSOR=$((CURSOR+1))
       ;;
-    I) zle vi-first-non-blank;;
+    L) zle vi-first-non-blank;;
     O)
       zle vi-digit-or-beginning-of-line
       LBUFFER+=$'\n'
@@ -2809,7 +2809,7 @@ function zvm_exit_visual_mode() {
 function zvm_enter_insert_mode() {
   local keys=${1:-$(zvm_keys)}
 
-  if [[ $keys == 'i' ]]; then
+  if [[ $keys == 'l' ]]; then
     ZVM_INSERT_MODE='i'
   elif [[ $keys == 'a' ]]; then
     ZVM_INSERT_MODE='a'
@@ -3259,8 +3259,8 @@ function zvm_init() {
   zvm_define_widget zvm_switch_keyword
 
   # Override standard widgets
-  zvm_define_widget zle-line-pre-redraw zvm_zle-line-pre-redraw
-
+  autoload add-zle-hook-widget
+  add-zle-hook-widget zle-line-pre-redraw zvm_zle-line-pre-redraw
   # Ensure the correct cursor style when an interactive program
   # (e.g. vim, bash, etc.) starts and exits
   zvm_define_widget zle-line-init zvm_zle-line-init
@@ -3297,9 +3297,9 @@ function zvm_init() {
   zvm_bindkey viins '^N' down-line-or-history
 
   # Insert mode
-  zvm_bindkey vicmd 'i'  zvm_enter_insert_mode
+  zvm_bindkey vicmd 'l'  zvm_enter_insert_mode
   zvm_bindkey vicmd 'a'  zvm_enter_insert_mode
-  zvm_bindkey vicmd 'I'  zvm_insert_bol
+  zvm_bindkey vicmd 'L'  zvm_insert_bol
   zvm_bindkey vicmd 'A'  zvm_append_eol
 
   # Other key bindings
@@ -3391,10 +3391,10 @@ function zvm_init() {
 
   # Surround key bindings
   for s in $surrounds; do
-    for c in {a,i}${s}; do
+    for c in {a,l}${s}; do
       zvm_bindkey visual "$c" zvm_select_surround
     done
-    for c in {c,d,y}{a,i}${s}; do
+    for c in {c,d,y}{a,l}${s}; do
       zvm_bindkey vicmd "$c" zvm_change_surround_text_object
     done
     if [[ $ZVM_VI_SURROUND_BINDKEY == 's-prefix' ]]; then
@@ -3450,7 +3450,7 @@ function zvm_exec_commands() {
     eval $cmd
   done
 }
-
+    
 # Initialize this plugin according to the mode
 case $ZVM_INIT_MODE in
   sourcing) zvm_init;;
